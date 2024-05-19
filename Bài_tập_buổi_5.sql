@@ -35,4 +35,31 @@ FROM monthly_cards_issued
 group by card_name
 order by max(issued_amount) - min(issued_amount) desc
 
+-- ex8
+SELECT manufacturer, 
+abs(sum(cogs - total_sales)) as total_loss, 
+count(drug) as drug_count
+FROM pharmacy_sales
+where total_sales < cogs
+group by manufacturer
+ORDER BY total_loss desc
 
+-- ex9
+select * from cinema
+where id%2=1 and description <> 'boring'
+order by rating desc
+
+-- ex10
+select  teacher_id, count(distinct subject_id) as cnt from Teacher
+group by teacher_id
+
+-- ex11
+select user_id, count(follower_id) as followers_count from Followers
+group by user_id
+order by user_id asc
+
+-- ex12
+select class from Courses
+group by class
+having count(student)>=5
+ 
