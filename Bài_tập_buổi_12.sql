@@ -11,6 +11,7 @@ select a.card_name, a.issued_amount from (SELECT card_name,
 RANK() over(partition by card_name order by issue_month||'/'||issue_year),issued_amount
 FROM monthly_cards_issued) as a
 where a.rank = 1
+order by issued_amount desc
 --or
 SELECT distinct card_name,
 first_value(issued_amount) 
