@@ -16,7 +16,8 @@ SELECT distinct card_name,
 first_value(issued_amount) 
 over(partition by card_name order by issue_month||'/'||issue_year)
 FROM monthly_cards_issued
-
+order by issued_amount desc
+ 
 -- ex3
 SELECT a.user_id, a.spend, a.transaction_date  
 FROM 
@@ -34,9 +35,19 @@ select transaction_date, user_id, rank() over(partition by transaction_date orde
 from a
 
 -- ex5
-SELECT user_id, tweet_date,
-ROUND(AVG(tweet_count) OVER ( PARTITION BY user_id ORDER BY tweet_date),2) AS rolling_avg_3d
-FROM tweets
+WITH tab_1 as (SELECT user_id, tweet_date,
+tweet_count as lag_0,
+coalesce(LAG(tweet_count,1) OVER ( PARTITION BY user_id ORDER BY tweet_date), '0')AS lag_1,
+coalesce(LAG(tweet_count,2) OVER ( PARTITION BY user_id ORDER BY tweet_date), '0') AS lag_2,
+count(tweet_date) OVER ( PARTITION BY user_id ORDER BY tweet_date) as day
+FROM tweets)
+
+,tab_2 as (select *,
+case
+when day <= 2 THEN
+round((lag_0+lag_1+lag_2)/cast(day as decimal),2)
+else round ((lag_0+lag_1+lag_2)/3.0,2)
+end as rolling_avg_3d FROM tab_1)
 
 -- ex6
 select count(*) from (SELECT transaction_id,
@@ -88,3 +99,4 @@ select artist_name, rank
 from tab2
 where rank <=5
 order by rank,artist_name
+
