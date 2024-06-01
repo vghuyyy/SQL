@@ -38,3 +38,21 @@ from Seat
 order by id
 
 -- ex4
+
+-- ex5
+with a as(select count(concat(lat,lon)), concat(lat,lon) as lat_lon from Insurance
+group by concat(lat,lon)
+having count(concat(lat,lon)) = 1),
+
+b as (select count(tiv_2015), tiv_2015 from Insurance
+group by tiv_2015
+having count(tiv_2015) > 1),
+
+c as (select *, concat(lat,lon) as lat_lon_2 from Insurance)
+
+select round(cast(sum(tiv_2016) as decimal),2) as tiv_2016 from c
+join a on c.lat_lon_2 = a.lat_lon
+where c.tiv_2015 in (select b.tiv_2015 from b)
+
+-- ex6
+
