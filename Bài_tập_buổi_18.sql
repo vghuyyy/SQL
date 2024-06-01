@@ -55,4 +55,30 @@ join a on c.lat_lon_2 = a.lat_lon
 where c.tiv_2015 in (select b.tiv_2015 from b)
 
 -- ex6
+with a as 
+(select Employee.name as Employee, Department.name as Department,salary, 
+dense_rank() over(partition by departmentId order by salary desc) as rank from Employee
+join Department
+on Employee.departmentId = Department.id)
+
+select Department, Employee, salary as Salary from a
+where rank <=3
+
+-- ex7
+select person_name from (select person_name, 
+sum(weight) over(order by turn) as total
+from Queue)
+where total <= 1000
+order by total desc
+limit 1
+
+-- ex8
+select product_id, new_price as price from(select *, rank() over(partition by product_id order by change_date desc) rank
+from Products
+where change_date <= '2019-08-16') 
+where rank = 1
+union
+select product_id, 10 as price from(select *, rank() over(partition by product_id order by change_date) rank
+from Products)
+where change_date > '2019-08-16' and rank = 1
 
