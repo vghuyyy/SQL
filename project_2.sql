@@ -108,3 +108,6 @@ where dates between '2022-01-15' and '2022-04-15'),
 e as (select distinct count(product_id) over(partition by product_id, dates) as amount, * from d)
 
 select dates, category as product_categories, (sale_price * amount) as revenue from e
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
