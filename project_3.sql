@@ -1,60 +1,49 @@
 -- Question 1:
-select productLine, year_id, dealsize, sum(quantityordered * priceeach) as revenue 
-from sales_dataset_rfm_prj_clean
-group by productLine, year_id, dealsize
-order by year_id, dealsize desc,revenue
+with cau1 as (
+	select productline, year_id, dealsize, sum(revenue) as total_revenue 
+	from sales_dataset_rfm_prj_clean
+	group by productline, year_id, dealsize)
 
 -- Question 2:
-with a as (select ordernumber, productLine, year_id, month_id, dealsize, sum(quantityordered * priceeach) as revenue 
-from sales_dataset_rfm_prj_clean
-group by ordernumber, productLine, year_id, month_id, dealsize
-order by year_id,month_id, dealsize desc,revenue),
-
-	b as (select month_id, year_id, sum(revenue) as total_revenue_per_month from a
-	group by month_id, year_id),
-
-	c as (select month_id, year_id, total_revenue_per_month from b as c
-	where total_revenue_per_month in (select max(total_revenue_per_month) from b group by year_id )),
-	
-	d as ((select ordernumber, productLine, month_id, year_id, dealsize, sum(quantityordered * priceeach) as revenue from sales_dataset_rfm_prj_clean 
-	group by ordernumber, productLine, month_id, year_id, dealsize)),
-	
-	e as (select *, sum(revenue) over(partition by month_id, year_id) as total_revenue_per_month from d)
-
-select c.month_id, c.total_revenue_per_month, e.ordernumber from e
-join c 
-on e.month_id = c.month_id
-order by c.total_revenue_per_month
+with cau2 as (
+	select month_id, year_id, ordernumber, sum(revenue) over (partition by month_id, year_id) as total_revenue
+	from sales_dataset_rfm_prj_clean),
+	cau2_1 as (
+	select month_id, year_id, ordernumber, total_revenue, 
+	rank() over (partition by year_id order by total_revenue desc) as top1_revenue
+	from cau2)
+select distinct * from cau2_1 
+where top1_revenue = 1
 
 -- Question 3:
-with 
-	d as ((select ordernumber, productLine, month_id, year_id, dealsize, sum(quantityordered * priceeach) as revenue from sales_dataset_rfm_prj_clean 
-	group by ordernumber, productLine, month_id, year_id, dealsize)),
-	
-	e as (select productLine,month_id, year_id, sum(revenue) as total_revenue from d
-where month_id = 11
-group by productLine,month_id, year_id),
-	
-	f as (select productLine, month_id, year_id, total_revenue from e
-	where total_revenue in (select max(total_revenue) from e group by month_id, year_id)),
-	
-	g as (select ordernumber, productLine,month_id, year_id, sum(revenue) over(partition by productLine,month_id, year_id) as total_revenue from d
-where month_id = 11)
+with cau3 as (
+select month_id, year_id, productline, ordernumber, 
+sum(quantityordered) over (partition by month_id, year_id, productline,ordernumber) as total_item,
+row_number() over (partition by month_id, year_id, productline,ordernumber) as stt
+from sales_dataset_rfm_prj_clean
+),
+	cau3_1 as (
+	select * from cau3
+	where stt = 1
+	),
 
-select g.month_id, g.total_revenue, g.ordernumber from g
-join f
-on g.total_revenue = f.total_revenue
+	cau3_2 as (
+	select month_id, year_id, productline, ordernumber, total_item,
+	rank() over (partition by month_id, year_id order by total_item desc) as rank
+	from cau3_1)
+select month_id, year_id, productline, ordernumber, total_item from cau3_2
+where rank = 1 and month_id = 11
 
 -- Question 4:
-with 
-	d as ((select ordernumber, productLine, month_id, year_id, dealsize, sum(quantityordered * priceeach) as revenue from sales_dataset_rfm_prj_clean 
+with cau4 as (
+	select * from sales_dataset_rfm_prj_clean
 	where country = 'UK'
-	group by ordernumber, productLine, month_id, year_id, dealsize)),
-	
-	e as (select productLine, year_id, sum(revenue) as total_revenue from d
-group by productLine, year_id)
-
-select *, rank() over(partition by year_id order by total_revenue desc) as rank from e
+	),
+	cau4_1 as (
+	select year_id, productline, sum(revenue) as total_revenue from cau4
+	group by year_id, productline
+	)
+select *, dense_rank() over (partition by year_id order by total_revenue desc) from cau4_1
 
 -- Question 5:
 with RFM as (select customername,
