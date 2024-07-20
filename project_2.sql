@@ -110,4 +110,32 @@ e as (select distinct count(product_id) over(partition by product_id, dates) as 
 select dates, category as product_categories, (sale_price * amount) as revenue from e
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- NEW
+-- Vì số lượng yêu cầu đơn hàng là đã hoàn thành nên sẽ sử dụng biến Delivered_date làm mốc thời gian ghi nhận
+-- Câu 1: Từ kết quả của câu truy vấn ta thấy rõ số lượng đơn hàng và số lượng khách mua hàng có xu hướng tăng theo thời gian
+-- Đặc biệt số lượng khách và số lượng đơn hàng có sự gia tăng đáng kể trong 3 tháng đầu năm 2022 cho thấy các chương trình giảm giá hay các chương trình tiếp thị của thelook là có ảnh hưởng đáng kể đến doanh số và doanh thu của công ty
+
+with orders as (
+  select *, format_date('%Y-%m', delivered_at) as month_year 
+  from bigquery-public-data.thelook_ecommerce.orders
+  where status = 'Complete'
+  )
+/*
+select month_year, count(distinct user_id) as total_user, count(order_id) as total_order from orders
+where month_year between '2019-01' and '2022-04'
+group by month_year
+order by month_year
+*/
+-- Câu 2: 
+,
+order_items as (
+  select *, format_date('%Y-%m', created_at) as month_year 
+  from bigquery-public-data.thelook_ecommerce.order_items
+  where status = 'Complete'
+  )
+select count(distinct order_id) from order_items
+select month_year, round(sum(sale_price)/count(order_id),2) as aov, count(distinct user_id) as total_user from order_items
+where month_year between '2019-01' and '2022-04'
+group by month_year
+order by month_year
 
