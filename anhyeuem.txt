@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Valentine 💖</title>
+    <style>
+        body {
+            text-align: center;
+            background-color: pink;
+            font-family: Arial;
+            margin-top: 100px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        #noBtn {
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+
+<h1>💖 Happy Valentine 💖</h1>
+<p>Anh có một câu hỏi dành cho em...</p>
+<h2>Em có yêu anh không? 😳</h2>
+
+<button onclick="alert('Anh biết mà 😆💖')">Có</button>
+<button id="noBtn" onmouseover="moveBtn()">Không</button>
+
+<script>
+function moveBtn() {
+    const btn = document.getElementById("noBtn");
+    btn.style.top = Math.random() * window.innerHeight + "px";
+    btn.style.left = Math.random() * window.innerWidth + "px";
+}
+</script>
+
+</body>
+</html>
